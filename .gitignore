@@ -105,3 +105,5 @@ venv.bak/
 test/
 book/.env.ini
 ./book/.env.ini
+.idea/*
+/.idea/
