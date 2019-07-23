@@ -71,7 +71,7 @@ for book in data:
                 else:
                     print('图书：《%s》章节：《%s》 采集成功' % (book[3], chapter_title))
                     time.sleep(1)
-                break
+
 
             if (book[1] == chapter_title): # step 3 匹配图书最后更新章节 跟 采集源最新章节比对 如果有更新则更新
                 start_point = True
