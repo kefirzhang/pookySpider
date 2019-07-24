@@ -48,7 +48,16 @@ for book in data:
                     article_url = spider_rule[3] + link.get('href')
                 ref_id = link.get('href').split('/').pop().split('.').pop(0)
                 ref_id = int(ref_id)
-                chapter_content = func.getChapterContent(article_url, spider_rule[7])
+
+                try:
+                    chapter_content = func.getChapterContent(article_url, spider_rule[7])
+                except:
+                    print('章节' + chapter_title + article_url + '采集失败')
+                    continue
+
+                chapter_content = pymysql.escape_string(chapter_content)
+
+
                 # step 5 更新图书信息
                 sql1 = "INSERT INTO book_chapter(b_id, bs_id, title, content,ref_id,`order`) VALUES ('%d', '%d', '%s', '%s','%d','%d')" % (
                     book[0], spider_rule[0], chapter_title, chapter_content, ref_id, ref_id)
@@ -72,8 +81,7 @@ for book in data:
                     print('图书：《%s》章节：《%s》 采集成功' % (book[3], chapter_title))
                     time.sleep(1)
 
-
-            if (book[1] == chapter_title): # step 3 匹配图书最后更新章节 跟 采集源最新章节比对 如果有更新则更新
+            if (book[1] == chapter_title):  # step 3 匹配图书最后更新章节 跟 采集源最新章节比对 如果有更新则更新
                 start_point = True
 
 # 关闭数据库连接
