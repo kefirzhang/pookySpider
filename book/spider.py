@@ -5,6 +5,8 @@ import func
 from bs4 import BeautifulSoup
 import time
 
+#TODO 采集锁机制
+
 # step 0 获取解析配置文件的配置信息
 dir = os.getcwd()
 ini_file = dir + '/.env.ini'
