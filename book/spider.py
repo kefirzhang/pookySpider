@@ -52,15 +52,16 @@ for book in data:
                 try:
                     chapter_content = func.getChapterContent(article_url, spider_rule[7])
                 except:
+                    chapter_content = '404:::' + chapter_title + ':::' + article_url  # 采集失败可以继续 回头可以重新采集
                     print('章节' + chapter_title + article_url + '采集失败')
-                    continue
 
                 chapter_content = pymysql.escape_string(chapter_content)
 
-
                 # step 5 更新图书信息
-                sql1 = "INSERT INTO book_chapter(b_id, bs_id, title, content,ref_id,`order`) VALUES ('%d', '%d', '%s', '%s','%d','%d')" % (
-                    book[0], spider_rule[0], chapter_title, chapter_content, ref_id, ref_id)
+                datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+                sql1 = "INSERT INTO book_chapter(b_id, bs_id, title, content,ref_id,`order`,`created_at`,`updated_at`) VALUES ('%d', '%d', '%s', '%s','%d','%d','%s','%s')" % (
+                    book[0], spider_rule[0], chapter_title, chapter_content, ref_id, ref_id, datetime, datetime)
                 sql2 = "UPDATE book SET last_chapter = '%s',bs_id='%d' WHERE id = '%d'" % (
                     chapter_title, spider_rule[0], book[0])
 

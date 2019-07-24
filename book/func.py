@@ -18,7 +18,11 @@ def getHtmlFromRemoteUrl(url):
     requestBody = urllib.request.Request(url, data, {})
     content = urllib.request.urlopen(requestBody)
     readContent = content.read()
-    # html = gzip.decompress(readContent).decode('gbk')
+    try:
+        readContent = gzip.decompress(readContent) #可能是压缩的gzip格式
+    except:
+        1 == 1
+
     try:
         html = readContent.decode('gbk')
     except:
