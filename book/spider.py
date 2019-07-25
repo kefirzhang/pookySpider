@@ -5,7 +5,7 @@ import func
 from bs4 import BeautifulSoup
 import time
 
-#TODO 采集锁机制
+# TODO 采集锁机制
 
 # step 0 获取解析配置文件的配置信息
 dir = os.getcwd()
@@ -23,6 +23,7 @@ cursor = db.cursor()
 cursor.execute("SELECT id,last_chapter,bs_id,`name` from book where finished=0")
 data = cursor.fetchall()
 for book in data:
+    func.doDBLog(1, 10001, '图书' + book[3] + '开始采集')
     # step 2 根据图书id 获取对应的采集规则
     cursor.execute(
         "SELECT id,site_url,info_url,list_url,detail_url,info_rule,list_rule,detail_rule from book_spider where b_id=%d" % (
@@ -44,10 +45,12 @@ for book in data:
             # chapter_href = "https://www.ddxs.cc" + link.get('href')
             chapter_title = link.get_text()
             if (start_point):  # 如果开始采集内容
-                if '/' in link.get('href'):
-                    article_url = spider_rule[1] + link.get('href')
+                if ('http://' in link.get('href')) or ('https://' in link.get('href')):  # 绝对路径
+                    article_url = link.get('href')
+                elif '/' in link.get('href'):
+                    article_url = spider_rule[1] + link.get('href')  # 相对路径1
                 else:
-                    article_url = spider_rule[3] + link.get('href')
+                    article_url = spider_rule[3] + link.get('href')  # 相对路径2
                 ref_id = link.get('href').split('/').pop().split('.').pop(0)
                 ref_id = int(ref_id)
 
@@ -55,7 +58,8 @@ for book in data:
                     chapter_content = func.getChapterContent(article_url, spider_rule[7])
                 except:
                     chapter_content = '404:::' + chapter_title + ':::' + article_url  # 采集失败可以继续 回头可以重新采集
-                    print('章节' + chapter_title + article_url + '采集失败')
+                    print('章节' + chapter_title + article_url + '获取内容失败')
+                    func.doDBLog(-1, -10001, '章节' + chapter_title + article_url + '获取内容失败')
 
                 chapter_content = pymysql.escape_string(chapter_content)
 
@@ -82,10 +86,13 @@ for book in data:
                     db.rollback()
                 else:
                     print('图书：《%s》章节：《%s》 采集成功' % (book[3], chapter_title))
+                    func.doDBLog(0, 0, '图书：《%s》章节：《%s》 采集成功' % (book[3], chapter_title))
                     time.sleep(1)
 
             if (book[1] == chapter_title):  # step 3 匹配图书最后更新章节 跟 采集源最新章节比对 如果有更新则更新
                 start_point = True
+
+    func.doDBLog(1, 10002, '图书' + book[3] + '采集结束')
 
 # 关闭数据库连接
 db.close()

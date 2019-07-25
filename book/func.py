@@ -1,6 +1,11 @@
 import urllib.request
 from bs4 import BeautifulSoup
 import gzip
+import time
+import os
+import pymysql
+import configparser
+
 
 def getHtmlFromRemoteUrl(url):
     headers = {
@@ -19,7 +24,7 @@ def getHtmlFromRemoteUrl(url):
     content = urllib.request.urlopen(requestBody)
     readContent = content.read()
     try:
-        readContent = gzip.decompress(readContent) #可能是压缩的gzip格式
+        readContent = gzip.decompress(readContent)  # 可能是压缩的gzip格式
     except:
         1 == 1
 
@@ -32,10 +37,11 @@ def getHtmlFromRemoteUrl(url):
 
     return html
 
+
 def getChapterContent(article_url, content_rule):
     article_Html = getHtmlFromRemoteUrl(article_url)
     chapter_soup = BeautifulSoup(article_Html, "html.parser")
-    readContent  =  chapter_soup.select_one(content_rule).encode_contents()
+    readContent = chapter_soup.select_one(content_rule).encode_contents()
 
     try:
         content = readContent.decode('gbk')
@@ -47,4 +53,38 @@ def getChapterContent(article_url, content_rule):
     return content
 
 
+# db日志函数
+def doDBLog(code, s_code, content):
+    datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    flow = 'book_spider-' + datetime + str(int(time.time()))
+    module = 'book'
+    intro = '图书采集'
 
+    dir = os.getcwd()
+    ini_file = dir + '/.env.ini'
+    config = configparser.ConfigParser()
+    config.read(ini_file)
+    # step 1 获取数据库所有待更新的图书 并遍历 book
+    # 打开数据库连接
+    db = pymysql.connect(config['database']['db_host'], config['database']['db_username'],
+                         config['database']['db_password'], config['database']['db_database'])
+
+    # 使用 cursor() 方法创建一个游标对象 cursor
+    cursor = db.cursor()
+
+    sql = "INSERT INTO log(`flow`, `module`, `intro`, `code`,`s_code`,`content`,`created_at`,`updated_at`) VALUES ('%s', '%s', '%s','%d','%d','%s','%s','%s')" % (
+    flow, module, intro, code, s_code, content, datetime, datetime)
+
+    try:
+        # 执行SQL语句
+        cursor.execute(sql)
+        # 提交到数据库执行
+        db.commit()
+    except pymysql.InternalError as error:
+        code, message = error.args
+        print(">>>>>>>>>>>>>", code, message)
+        # 发生错误时回滚
+        print(sql)
+        db.rollback()
+
+    db.close()
