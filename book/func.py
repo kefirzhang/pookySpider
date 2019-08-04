@@ -19,8 +19,9 @@ def getHtmlFromRemoteUrl(url):
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
         'Cookie': 'Hm_lvt_28dca3408b4d7b74d7cb72f2ec2b7f80=1563777965; Hm_lpvt_28dca3408b4d7b74d7cb72f2ec2b7f80=1563779615',
     }
+    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0'}
     data = None
-    requestBody = urllib.request.Request(url, data, {})
+    requestBody = urllib.request.Request(url, data, headers)
     content = urllib.request.urlopen(requestBody)
     readContent = content.read()
     try:
